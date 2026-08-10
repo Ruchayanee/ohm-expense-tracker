@@ -1,0 +1,9 @@
+{
+  "name": "ค่าใช้จ่าย",
+  "short_name": "ค่าใช้จ่าย",
+  "start_url": "./child.html",
+  "display": "standalone",
+  "background_color": "#f6efe3",
+  "theme_color": "#0b1730",
+  "description": "แอปบันทึกค่าใช้จ่ายของฝั่งลูก"
+}
