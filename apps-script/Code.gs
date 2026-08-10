@@ -1,5 +1,6 @@
 const EXPENSE_SHEET = "expenses";
 const TRANSFER_SHEET = "transfers";
+const SPREADSHEET_ID = "1gtuicHZgvWCz0H7OHbC7QbyL-zr8NtSgRB3pifZL3xI";
 
 function doGet(e) {
   const callback = e.parameter.callback || "callback";
@@ -110,7 +111,7 @@ function writeRows(sheetName, headers, rows) {
 }
 
 function getSheet(name, headers) {
-  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
   const sheet = spreadsheet.getSheetByName(name) || spreadsheet.insertSheet(name);
 
   if (sheet.getLastRow() === 0) {
