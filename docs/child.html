@@ -16,24 +16,10 @@
         <p class="eyebrow">ฝั่งโอม</p>
         <h1>ค่าใช้จ่าย</h1>
       </div>
-      <a class="small-link" href="./mother.html">ไปฝั่งหม่าม๊า</a>
+      <a class="small-link" href="./mother.html">ไปหน้าโอม</a>
     </header>
 
     <main class="app">
-      <section class="sync panel">
-        <h2>Google Sheet</h2>
-        <label class="field">
-          <span>ลิงก์ Apps Script</span>
-          <input id="sync-url" type="url" placeholder="วาง Web app URL" />
-        </label>
-        <div class="actions">
-          <button id="save-sync-url" type="button">บันทึกลิงก์</button>
-          <button id="pull-sync" class="secondary" type="button">ดึงข้อมูล</button>
-          <button id="push-sync" class="light" type="button">ส่งข้อมูล</button>
-        </div>
-        <p id="sync-status" class="muted status">ยังไม่ได้ตั้งค่าลิงก์</p>
-      </section>
-
       <section class="summary" aria-label="สรุปยอด">
         <article><span>รายจ่ายรวม</span><strong id="total-expense">฿0</strong></article>
         <article><span>ยอดค้าง</span><strong id="outstanding">฿0</strong></article>
@@ -77,7 +63,7 @@
       </section>
     </main>
 
-    <iframe id="sync-frame" name="sync-frame" class="hidden" title="Google Sheet sync"></iframe>
+    <iframe id="sync-frame" name="sync-frame" class="hidden" title="sync"></iframe>
     <form id="sync-form" class="hidden" method="post" target="sync-frame">
       <input id="sync-payload" name="payload" />
     </form>
