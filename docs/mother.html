@@ -44,6 +44,34 @@
         background: rgba(255, 255, 255, 0.56);
       }
 
+      .qr-transfer {
+        display: grid;
+        justify-items: center;
+        gap: 10px;
+        border: 1px solid rgba(184, 149, 90, 0.28);
+        border-radius: 24px;
+        padding: 16px;
+        background: rgba(11, 23, 48, 0.92);
+        color: var(--cream);
+      }
+
+      .qr-transfer img {
+        width: min(220px, 100%);
+        aspect-ratio: 1;
+        border: 10px solid #fff;
+        border-radius: 18px;
+        background: #fff;
+        object-fit: contain;
+        box-shadow: 0 18px 38px rgba(11, 23, 48, 0.22);
+      }
+
+      .qr-transfer p {
+        margin: 0;
+        color: rgba(255, 247, 234, 0.78);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
       .bank-box div {
         display: flex;
         justify-content: space-between;
@@ -107,7 +135,11 @@
           <div>
             <p class="eyebrow dark">ข้อมูลรับโอน</p>
             <h2>บัญชีสำหรับโอนเงิน</h2>
-            <p class="muted">อ้างอิงจากโค้ด SN Kohlarn ที่ใช้ตรวจสอบบัญชีรับโอน</p>
+            <p class="muted">QR และบัญชีอ้างอิงจากหน้า “ระบบบัญชี และ สต๊อก” ของ SN Kohlarn</p>
+          </div>
+          <div class="qr-transfer">
+            <img src="https://i.postimg.cc/QMvzFd8d/IMG-1752.jpg" alt="QR Code สำหรับโอนเงิน" />
+            <p>สแกน QR เพื่อโอนเงิน</p>
           </div>
           <div class="bank-box">
             <div>
@@ -130,7 +162,7 @@
           >
             คัดลอกเลขบัญชี
           </button>
-          <p class="muted tiny-note">ยังไม่พบรูป QR จริงในโค้ด SN Kohlarn จึงใส่เป็นข้อมูลบัญชีที่ยืนยันได้ก่อน</p>
+          <p class="muted tiny-note">ถ้าสแกน QR ไม่ได้ ให้ใช้เลขบัญชีด้านบนแทน</p>
         </section>
 
         <form id="transfer-form" class="panel">
