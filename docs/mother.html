@@ -9,6 +9,82 @@
     <title>โอม</title>
     <link rel="manifest" href="./manifest.webmanifest?v=20260810-app-names" />
     <link rel="stylesheet" href="./styles.css?v=20260810-luxury" />
+    <style>
+      .payment-card {
+        position: relative;
+        overflow: hidden;
+        display: grid;
+        gap: 16px;
+        background:
+          radial-gradient(circle at top right, rgba(184, 149, 90, 0.24), transparent 13rem),
+          linear-gradient(145deg, rgba(255, 250, 241, 0.96), rgba(239, 227, 208, 0.9));
+      }
+
+      .payment-card::after {
+        position: absolute;
+        right: -48px;
+        top: -62px;
+        width: 180px;
+        height: 180px;
+        border: 1px solid rgba(184, 149, 90, 0.28);
+        border-radius: 999px;
+        content: "";
+      }
+
+      .eyebrow.dark {
+        color: var(--gold);
+      }
+
+      .bank-box {
+        display: grid;
+        gap: 12px;
+        border: 1px solid rgba(184, 149, 90, 0.28);
+        border-radius: 20px;
+        padding: 16px;
+        background: rgba(255, 255, 255, 0.56);
+      }
+
+      .bank-box div {
+        display: flex;
+        justify-content: space-between;
+        gap: 14px;
+        align-items: baseline;
+      }
+
+      .bank-box span {
+        color: var(--muted);
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      .bank-box strong {
+        color: var(--navy);
+        text-align: right;
+      }
+
+      .tiny-note {
+        margin-bottom: 0;
+        font-size: 13px;
+      }
+
+      @media (max-width: 560px) {
+        .bank-box div {
+          align-items: flex-start;
+          flex-direction: column;
+          gap: 2px;
+        }
+
+        .bank-box strong {
+          text-align: left;
+        }
+      }
+
+      @media (min-width: 780px) {
+        .payment-card {
+          grid-column: 1 / -1;
+        }
+      }
+    </style>
   </head>
   <body data-view="mother">
     <header class="topbar">
@@ -27,6 +103,36 @@
       </section>
 
       <section class="layout">
+        <section class="panel payment-card" aria-label="ข้อมูลรับโอน">
+          <div>
+            <p class="eyebrow dark">ข้อมูลรับโอน</p>
+            <h2>บัญชีสำหรับโอนเงิน</h2>
+            <p class="muted">อ้างอิงจากโค้ด SN Kohlarn ที่ใช้ตรวจสอบบัญชีรับโอน</p>
+          </div>
+          <div class="bank-box">
+            <div>
+              <span>ธนาคาร</span>
+              <strong>กสิกรไทย</strong>
+            </div>
+            <div>
+              <span>ชื่อบัญชี</span>
+              <strong>สุภชาดา เกษมโสม</strong>
+            </div>
+            <div>
+              <span>เลขบัญชี</span>
+              <strong id="bank-account">017-2-57397-7</strong>
+            </div>
+          </div>
+          <button
+            class="secondary"
+            type="button"
+            onclick="navigator.clipboard?.writeText('0172573977'); this.textContent='คัดลอกแล้ว';"
+          >
+            คัดลอกเลขบัญชี
+          </button>
+          <p class="muted tiny-note">ยังไม่พบรูป QR จริงในโค้ด SN Kohlarn จึงใส่เป็นข้อมูลบัญชีที่ยืนยันได้ก่อน</p>
+        </section>
+
         <form id="transfer-form" class="panel">
           <h2>หม่าม๊าบันทึกการโอน</h2>
           <label class="field">
