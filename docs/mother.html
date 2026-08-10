@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>โอม: ฝั่งหม่าม๊า</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body data-view="mother">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">ฝั่งหม่าม๊า</p>
+        <h1>โอม</h1>
+      </div>
+      <a class="small-link" href="./child.html">ไปฝั่งโอม</a>
+    </header>
+
+    <main class="app">
+      <section class="sync panel">
+        <h2>Google Sheet</h2>
+        <label class="field">
+          <span>ลิงก์ Apps Script</span>
+          <input id="sync-url" type="url" placeholder="วาง Web app URL" />
+        </label>
+        <div class="actions">
+          <button id="save-sync-url" type="button">บันทึกลิงก์</button>
+          <button id="pull-sync" class="secondary" type="button">ดึงข้อมูล</button>
+          <button id="push-sync" class="light" type="button">ส่งข้อมูล</button>
+        </div>
+        <p id="sync-status" class="muted status">ยังไม่ได้ตั้งค่าลิงก์</p>
+      </section>
+
+      <section class="summary" aria-label="สรุปยอด">
+        <article><span>รายจ่ายรวม</span><strong id="total-expense">฿0</strong></article>
+        <article><span>ยอดค้าง</span><strong id="outstanding">฿0</strong></article>
+        <article><span>หม่าม๊าโอนแล้ว</span><strong id="paid-total">฿0</strong></article>
+        <article><span>จำนวนรายการ</span><strong id="expense-count">0</strong></article>
+      </section>
+
+      <section class="layout">
+        <form id="transfer-form" class="panel">
+          <h2>หม่าม๊าบันทึกการโอน</h2>
+          <label class="field">
+            <span>วันที่โอน</span>
+            <input id="transfer-date" type="date" required />
+          </label>
+          <label class="field">
+            <span>ยอดโอน</span>
+            <input id="transfer-amount" type="number" min="1" step="0.01" required />
+          </label>
+          <label class="field">
+            <span>หมายเหตุ</span>
+            <textarea id="transfer-note" rows="3"></textarea>
+          </label>
+          <button type="submit">บันทึกว่าโอนแล้ว</button>
+        </form>
+
+        <section class="panel">
+          <h2>รายการค้างชำระ</h2>
+          <div id="unpaid-list" class="list"></div>
+        </section>
+
+        <section class="panel">
+          <h2>ประวัติการโอน</h2>
+          <div id="transfer-list" class="list"></div>
+        </section>
+
+        <section class="panel">
+          <h2>สำรองข้อมูล</h2>
+          <p class="muted">ใช้เมื่อต้องย้ายข้อมูลหรือเก็บไฟล์สำรอง</p>
+          <div class="actions">
+            <button id="export-button" class="secondary" type="button">ดาวน์โหลดข้อมูล</button>
+            <button id="import-button" class="light" type="button">นำเข้าข้อมูล</button>
+            <button id="clear-button" class="danger" type="button">ล้างข้อมูล</button>
+          </div>
+          <input id="import-file" class="hidden" type="file" accept="application/json" />
+        </section>
+      </section>
+    </main>
+
+    <iframe id="sync-frame" name="sync-frame" class="hidden" title="Google Sheet sync"></iframe>
+    <form id="sync-form" class="hidden" method="post" target="sync-frame">
+      <input id="sync-payload" name="payload" />
+    </form>
+    <script src="./config.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
