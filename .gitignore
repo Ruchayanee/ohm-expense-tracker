@@ -1,0 +1,7 @@
+.firebase/
+.firebase-cli-config/
+firebase-debug.log
+firebase-debug.*.log
+.npm-cache/
+node_modules/
+work/
