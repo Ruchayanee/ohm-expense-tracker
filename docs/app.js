@@ -1,5 +1,6 @@
 const STORAGE_KEY = "ohm-expenses-v1";
 const SYNC_URL_KEY = "ohm-apps-script-url";
+const INSTALL_PROMPT_KEY = "ohm-ios-install-prompt-seen";
 const view = document.body.dataset.view;
 const money = new Intl.NumberFormat("th-TH", { style: "currency", currency: "THB" });
 const today = new Date().toISOString().slice(0, 10);
@@ -20,6 +21,7 @@ function boot() {
   bindMother();
   render();
   updateSyncStatus();
+  showIosInstallGuide();
 }
 
 function bindSync() {
@@ -295,4 +297,39 @@ function clearData() {
   saveState();
   pushToSheet(true);
   render();
+}
+
+function showIosInstallGuide() {
+  const isAppleTouchDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const isStandalone = window.navigator.standalone === true || window.matchMedia("(display-mode: standalone)").matches;
+
+  if (!isAppleTouchDevice || isStandalone || localStorage.getItem(INSTALL_PROMPT_KEY)) return;
+
+  const guide = document.createElement("aside");
+  guide.className = "install-guide";
+  guide.setAttribute("role", "dialog");
+  guide.setAttribute("aria-label", "วิธีเพิ่มแอปโอมไปหน้าโฮม");
+  guide.innerHTML = `
+    <div class="install-card">
+      <button class="install-close" type="button" aria-label="ปิดคำแนะนำ">×</button>
+      <div class="install-icon">โอม</div>
+      <p class="eyebrow">ใช้ง่ายเหมือนแอป</p>
+      <h2>เพิ่ม “โอม” ไว้หน้าโฮม iPhone</h2>
+      <ol>
+        <li>กดปุ่มแชร์ <span class="share-mark">□↑</span> ด้านล่างของ Safari</li>
+        <li>เลื่อนหาเมนู “เพิ่มไปยังหน้าจอโฮม”</li>
+        <li>กด “เพิ่ม” แล้วเปิดโอมจากหน้าโฮมได้เลย</li>
+      </ol>
+      <button class="install-done" type="button">เข้าใจแล้ว</button>
+    </div>
+  `;
+
+  const closeGuide = () => {
+    localStorage.setItem(INSTALL_PROMPT_KEY, "1");
+    guide.remove();
+  };
+
+  guide.querySelector(".install-close").addEventListener("click", closeGuide);
+  guide.querySelector(".install-done").addEventListener("click", closeGuide);
+  document.body.appendChild(guide);
 }
