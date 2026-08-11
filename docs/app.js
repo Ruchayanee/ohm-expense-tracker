@@ -26,6 +26,7 @@ function boot() {
   bindQrModal();
   render();
   updateSyncStatus();
+  autoPullForMother();
   showIosInstallGuide();
 }
 
@@ -668,6 +669,11 @@ function updateSyncStatus(message) {
   syncStatus.textContent = message || (syncUrl ? "พร้อมซิงก์กับ Google Sheet" : "ยังไม่ได้ตั้งค่าลิงก์");
 }
 
+function autoPullForMother() {
+  if (view !== "mother" || !getSyncUrl()) return;
+  window.setTimeout(() => pullFromSheet(true), 250);
+}
+
 function pushToSheet(silent) {
   const syncUrl = getSyncUrl();
 
@@ -702,11 +708,11 @@ function transferForSync(transfer) {
   };
 }
 
-function pullFromSheet() {
+function pullFromSheet(silent = false) {
   const syncUrl = getSyncUrl();
 
   if (!syncUrl) {
-    updateSyncStatus("กรุณาวางลิงก์ Apps Script ก่อน");
+    if (!silent) updateSyncStatus("กรุณาวางลิงก์ Apps Script ก่อน");
     return;
   }
 
@@ -720,20 +726,20 @@ function pullFromSheet() {
     state.transfers = Array.isArray(data.transfers) ? data.transfers : [];
     saveState();
     render();
-    updateSyncStatus("ดึงข้อมูลจาก Google Sheet แล้ว");
+    if (!silent) updateSyncStatus("ดึงข้อมูลจาก Google Sheet แล้ว");
     delete window[callbackName];
     script.remove();
   };
 
   script.onerror = () => {
-    updateSyncStatus("ดึงข้อมูลไม่ได้ กรุณาตรวจลิงก์ Apps Script");
+    if (!silent) updateSyncStatus("ดึงข้อมูลไม่ได้ กรุณาตรวจลิงก์ Apps Script");
     delete window[callbackName];
     script.remove();
   };
 
   script.src = `${syncUrl}${separator}action=load&callback=${callbackName}`;
   document.body.appendChild(script);
-  updateSyncStatus("กำลังดึงข้อมูลจาก Google Sheet...");
+  if (!silent) updateSyncStatus("กำลังดึงข้อมูลจาก Google Sheet...");
 }
 
 function exportData() {
