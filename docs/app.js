@@ -5,6 +5,7 @@ const view = document.body.dataset.view;
 const money = new Intl.NumberFormat("th-TH", { style: "currency", currency: "THB" });
 const today = new Date().toISOString().slice(0, 10);
 const state = loadState();
+let bulkDraft = [];
 
 const syncUrlInput = document.querySelector("#sync-url");
 const syncStatus = document.querySelector("#sync-status");
@@ -13,6 +14,7 @@ boot();
 
 function boot() {
   if (document.querySelector("#expense-date")) document.querySelector("#expense-date").value = today;
+  if (document.querySelector("#bulk-default-date")) document.querySelector("#bulk-default-date").value = today;
   if (document.querySelector("#transfer-date")) document.querySelector("#transfer-date").value = today;
   if (syncUrlInput) syncUrlInput.value = localStorage.getItem(SYNC_URL_KEY) || window.OHM_APPS_SCRIPT_URL || "";
 
@@ -54,6 +56,10 @@ function bindChild() {
     pushToSheet(true);
     render();
   });
+
+  document.querySelector("#analyze-bulk-button")?.addEventListener("click", analyzeBulkExpenses);
+  document.querySelector("#save-bulk-button")?.addEventListener("click", saveBulkExpenses);
+  document.querySelector("#clear-bulk-button")?.addEventListener("click", clearBulkExpenses);
 }
 
 function bindMother() {
@@ -118,7 +124,7 @@ function value(selector) {
 }
 
 function toNumber(input) {
-  return round(Number(input || 0));
+  return round(Number(String(input || "").replaceAll(",", "")));
 }
 
 function round(number) {
@@ -203,6 +209,196 @@ function render() {
 function setText(selector, text) {
   const element = document.querySelector(selector);
   if (element) element.textContent = text;
+}
+
+function analyzeBulkExpenses() {
+  const text = value("#bulk-expense-text").trim();
+  bulkDraft = parseBulkExpenses(text);
+  renderBulkAnalysis(bulkDraft);
+}
+
+function saveBulkExpenses() {
+  if (!bulkDraft.length) return;
+
+  const createdAt = Date.now();
+  for (const [index, expense] of bulkDraft.entries()) {
+    state.expenses.push({
+      id: crypto.randomUUID(),
+      date: expense.date,
+      category: expense.category,
+      description: expense.description,
+      amount: expense.amount,
+      paid: 0,
+      createdAt: createdAt + index
+    });
+  }
+
+  saveState();
+  pushToSheet(true);
+  render();
+  renderBulkAnalysis([], `บันทึกแล้ว ${bulkDraft.length} รายการ รวม ${money.format(sumAmounts(bulkDraft))}`);
+  bulkDraft = [];
+  const button = document.querySelector("#save-bulk-button");
+  if (button) button.disabled = true;
+}
+
+function clearBulkExpenses() {
+  const input = document.querySelector("#bulk-expense-text");
+  if (input) input.value = "";
+  bulkDraft = [];
+  renderBulkAnalysis([]);
+}
+
+function parseBulkExpenses(text) {
+  if (!text) return [];
+
+  const lines = text
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  let activeDate = value("#bulk-default-date") || today;
+  const expenses = [];
+
+  for (const rawLine of lines) {
+    const line = rawLine.replace(/^[\-•–—]\s*/, "").trim();
+    const parsedDate = parseThaiDate(line);
+
+    if (parsedDate) {
+      activeDate = parsedDate;
+      continue;
+    }
+
+    const parsedAmount = extractTrailingAmount(line);
+    if (!parsedAmount) continue;
+
+    expenses.push({
+      date: activeDate,
+      category: inferCategory(parsedAmount.description),
+      description: parsedAmount.description,
+      amount: parsedAmount.amount
+    });
+  }
+
+  return expenses;
+}
+
+function parseThaiDate(line) {
+  const match = line.match(/^วันที่\s*(\d{1,2})\s*([ก-๙.]+)\s*$/i);
+  if (!match) return "";
+
+  const month = thaiMonthNumber(match[2]);
+  if (!month) return "";
+
+  const year = new Date().getFullYear();
+  const day = match[1].padStart(2, "0");
+  return `${year}-${String(month).padStart(2, "0")}-${day}`;
+}
+
+function thaiMonthNumber(monthText) {
+  const clean = monthText.replaceAll(".", "").trim();
+  const months = [
+    ["มกรา", "มกราคม"],
+    ["กุมภา", "กุมภาพันธ์"],
+    ["มีนา", "มีนาคม"],
+    ["เมษา", "เมษายน"],
+    ["พฤษภา", "พฤษภาคม"],
+    ["มิถุนา", "มิถุนายน"],
+    ["กรกฎา", "กรกฎาคม"],
+    ["สิงหา", "สิงหาคม"],
+    ["กันยา", "กันยายน"],
+    ["ตุลา", "ตุลาคม"],
+    ["พฤศจิกา", "พฤศจิกายน"],
+    ["ธันวา", "ธันวาคม"]
+  ];
+
+  const index = months.findIndex((aliases) => aliases.some((alias) => clean.startsWith(alias)));
+  return index >= 0 ? index + 1 : 0;
+}
+
+function extractTrailingAmount(line) {
+  const matches = [...line.matchAll(/\d[\d,]*(?:\.\d+)?/g)];
+  if (!matches.length) return null;
+
+  const last = matches[matches.length - 1];
+  const amount = toNumber(last[0]);
+  if (!amount) return null;
+
+  const description = line.slice(0, last.index).replace(/[=:\s]+$/, "").trim();
+  return {
+    amount,
+    description: description || line.replace(last[0], "").trim() || "ไม่ระบุรายละเอียด"
+  };
+}
+
+function inferCategory(description) {
+  const text = description.toLowerCase();
+
+  if (/ข้าว|ปิ้งย่าง|ส้มตำ|ไก่ย่าง|ยำ|กุ๊ก|กุ้ง|อาหาร|กิน/.test(text)) return "อาหาร";
+  if (/รถ|ที่จอด|ปะยาง|มอไซต์|มอเตอร์ไซ|ตู้|เดินทาง/.test(text)) return "เดินทาง";
+  if (/gpt|แชท|chat/.test(text)) return "การเรียน";
+  if (/นาฬิกา|เซอวิส|service|ของใช้/.test(text)) return "ของใช้";
+  if (/หมอ|ยา|สุขภาพ/.test(text)) return "สุขภาพ";
+  return "อื่น ๆ";
+}
+
+function renderBulkAnalysis(items, message = "") {
+  const result = document.querySelector("#bulk-analysis");
+  const saveButton = document.querySelector("#save-bulk-button");
+  if (!result) return;
+
+  if (saveButton) saveButton.disabled = !items.length;
+
+  if (!items.length) {
+    result.innerHTML = message ? `<p class="status">${escapeHtml(message)}</p>` : "";
+    return;
+  }
+
+  const grouped = groupByCategory(items);
+  const groupedHtml = Object.entries(grouped)
+    .map(([category, total]) => `<span class="summary-pill">${escapeHtml(category)} ${money.format(total)}</span>`)
+    .join("");
+  const rows = items
+    .map((item) => `
+      <tr>
+        <td>${escapeHtml(item.date)}</td>
+        <td>${escapeHtml(item.category)}</td>
+        <td>${escapeHtml(item.description)}</td>
+        <td class="amount-cell">${money.format(item.amount)}</td>
+      </tr>
+    `)
+    .join("");
+
+  result.innerHTML = `
+    <div class="bulk-total">
+      <span>อ่านได้ ${items.length} รายการ</span>
+      <strong>${money.format(sumAmounts(items))}</strong>
+    </div>
+    <div class="summary-pills">${groupedHtml}</div>
+    <div class="table-wrap">
+      <table class="bulk-table">
+        <thead>
+          <tr>
+            <th>วันที่</th>
+            <th>หมวด</th>
+            <th>รายการ</th>
+            <th>ยอด</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+function sumAmounts(items) {
+  return round(items.reduce((sum, item) => sum + Number(item.amount || 0), 0));
+}
+
+function groupByCategory(items) {
+  return items.reduce((groups, item) => {
+    groups[item.category] = round((groups[item.category] || 0) + Number(item.amount || 0));
+    return groups;
+  }, {});
 }
 
 function getSyncUrl() {
@@ -305,20 +501,21 @@ function showIosInstallGuide() {
 
   if (!isAppleTouchDevice || isStandalone || localStorage.getItem(INSTALL_PROMPT_KEY)) return;
 
+  const appName = view === "child" ? "ค่าใช้จ่าย" : "โอม";
   const guide = document.createElement("aside");
   guide.className = "install-guide";
   guide.setAttribute("role", "dialog");
-  guide.setAttribute("aria-label", "วิธีเพิ่มแอปโอมไปหน้าโฮม");
+  guide.setAttribute("aria-label", `วิธีเพิ่มแอป${appName}ไปหน้าโฮม`);
   guide.innerHTML = `
     <div class="install-card">
       <button class="install-close" type="button" aria-label="ปิดคำแนะนำ">×</button>
-      <div class="install-icon">โอม</div>
+      <div class="install-icon">${appName}</div>
       <p class="eyebrow">ใช้ง่ายเหมือนแอป</p>
-      <h2>เพิ่ม “โอม” ไว้หน้าโฮม iPhone</h2>
+      <h2>เพิ่ม “${appName}” ไว้หน้าโฮม iPhone</h2>
       <ol>
         <li>กดปุ่มแชร์ <span class="share-mark">□↑</span> ด้านล่างของ Safari</li>
         <li>เลื่อนหาเมนู “เพิ่มไปยังหน้าจอโฮม”</li>
-        <li>กด “เพิ่ม” แล้วเปิดโอมจากหน้าโฮมได้เลย</li>
+        <li>กด “เพิ่ม” แล้วเปิด${appName}จากหน้าโฮมได้เลย</li>
       </ol>
       <button class="install-done" type="button">เข้าใจแล้ว</button>
     </div>
