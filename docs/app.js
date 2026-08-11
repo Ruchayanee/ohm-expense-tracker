@@ -4,8 +4,10 @@ const INSTALL_PROMPT_KEY = "ohm-ios-install-prompt-seen";
 const view = document.body.dataset.view;
 const money = new Intl.NumberFormat("th-TH", { style: "currency", currency: "THB" });
 const today = new Date().toISOString().slice(0, 10);
+const EXPECTED_ACCOUNT_NAME = "รัชพล กุลวิทูรเวที";
 const state = loadState();
 let bulkDraft = [];
+let slipDraft = null;
 
 const syncUrlInput = document.querySelector("#sync-url");
 const syncStatus = document.querySelector("#sync-status");
@@ -15,12 +17,13 @@ boot();
 function boot() {
   if (document.querySelector("#expense-date")) document.querySelector("#expense-date").value = today;
   if (document.querySelector("#bulk-default-date")) document.querySelector("#bulk-default-date").value = today;
-  if (document.querySelector("#transfer-date")) document.querySelector("#transfer-date").value = today;
+  if (document.querySelector("#slip-attached-date")) document.querySelector("#slip-attached-date").value = "";
   if (syncUrlInput) syncUrlInput.value = localStorage.getItem(SYNC_URL_KEY) || window.OHM_APPS_SCRIPT_URL || "";
 
   bindSync();
   bindChild();
   bindMother();
+  bindQrModal();
   render();
   updateSyncStatus();
   showIosInstallGuide();
@@ -63,16 +66,46 @@ function bindChild() {
 }
 
 function bindMother() {
+  document.querySelector("#transfer-slip")?.addEventListener("change", handleSlipFile);
+  document.querySelector("#slip-text")?.addEventListener("input", analyzeSlipText);
+  document.querySelector("#transfer-amount")?.addEventListener("input", renderSlipCheck);
+
   document.querySelector("#transfer-form")?.addEventListener("submit", (event) => {
     event.preventDefault();
 
-    let remaining = toNumber(value("#transfer-amount"));
+    if (!slipDraft?.image) {
+      alert("กรุณาแนบรูปสลิปก่อนบันทึก");
+      return;
+    }
+
+    const slipText = value("#slip-text").trim();
+    const recipientMatched = isExpectedRecipient(slipText);
+    if (slipText && !recipientMatched) {
+      alert("ชื่อในข้อความสลิปยังไม่ตรงกับ รัชพล กุลวิทูรเวที กรุณาตรวจสลิปอีกครั้ง");
+      return;
+    }
+
+    const transferAmount = toNumber(value("#transfer-amount"));
+    if (!transferAmount) {
+      alert("กรุณาใส่ยอดโอนจากสลิป");
+      return;
+    }
+
+    let remaining = transferAmount;
     const transfer = {
       id: crypto.randomUUID(),
       date: value("#transfer-date"),
-      amount: remaining,
-      note: value("#transfer-note").trim(),
+      amount: transferAmount,
+      note: buildSlipNote(slipText, recipientMatched),
       items: [],
+      slip: {
+        fileName: slipDraft.fileName,
+        image: slipDraft.image,
+        attachedDate: slipDraft.attachedDate,
+        recipientMatched,
+        checkedText: slipText,
+        remainingAfterTransfer: getRemainingAfterTransfer(transferAmount)
+      },
       createdAt: Date.now()
     };
 
@@ -86,14 +119,12 @@ function bindMother() {
       transfer.items.push({ expenseId: expense.id, amount: applied });
     }
 
-    if (remaining > 0) {
-      alert("ยอดโอนมากกว่ายอดค้าง กรุณาใส่ยอดไม่เกินยอดค้าง");
-      return;
-    }
-
     state.transfers.push(transfer);
     event.target.reset();
-    document.querySelector("#transfer-date").value = today;
+    document.querySelector("#slip-attached-date").value = "";
+    slipDraft = null;
+    renderSlipPreview();
+    renderSlipCheck();
     saveState();
     pushToSheet(true);
     render();
@@ -105,6 +136,32 @@ function bindMother() {
   });
   document.querySelector("#import-file")?.addEventListener("change", importData);
   document.querySelector("#clear-button")?.addEventListener("click", clearData);
+}
+
+function bindQrModal() {
+  const modal = document.querySelector("#qr-modal");
+  const modalImage = document.querySelector("#qr-modal-image");
+  const modalDownload = document.querySelector("#qr-modal-download");
+
+  document.querySelectorAll(".qr-preview-button").forEach((button) => {
+    button.addEventListener("click", () => {
+      if (!modal || !modalImage || !modalDownload) return;
+      const src = button.dataset.qrSrc;
+      modalImage.src = src;
+      modalImage.alt = button.dataset.qrAlt || "QR Code สำหรับโอนเงิน";
+      modalDownload.href = src;
+      modal.classList.remove("hidden");
+    });
+  });
+
+  document.querySelector("#qr-modal-close")?.addEventListener("click", closeQrModal);
+  modal?.addEventListener("click", (event) => {
+    if (event.target === modal) closeQrModal();
+  });
+}
+
+function closeQrModal() {
+  document.querySelector("#qr-modal")?.classList.add("hidden");
 }
 
 function loadState() {
@@ -170,6 +227,16 @@ function expenseHtml(expense) {
 }
 
 function transferHtml(transfer) {
+  const slip = transfer.slip || {};
+  const remainingText = typeof slip.remainingAfterTransfer === "number" && slip.remainingAfterTransfer <= 0
+    ? "ไม่มียอดค้าง"
+    : typeof slip.remainingAfterTransfer === "number"
+      ? `คงเหลือ ${money.format(slip.remainingAfterTransfer)}`
+      : `ครอบคลุม ${transfer.items.length} รายการ`;
+  const slipHtml = slip.image
+    ? `<button class="slip-thumb" type="button" data-slip-id="${escapeHtml(transfer.id)}"><img src="${escapeHtml(slip.image)}" alt="สลิปการโอน" /></button>`
+    : "";
+
   return `
     <article class="item">
       <div class="item-top">
@@ -179,7 +246,8 @@ function transferHtml(transfer) {
         </div>
         <div class="amount">${money.format(transfer.amount)}</div>
       </div>
-      <span class="badge">ครอบคลุม ${transfer.items.length} รายการ</span>
+      ${slipHtml}
+      <span class="badge">${escapeHtml(remainingText)}</span>
     </article>
   `;
 }
@@ -204,6 +272,7 @@ function render() {
   renderList("#expense-list", newest.map(expenseHtml).join(""), "ยังไม่มีรายการ");
   renderList("#unpaid-list", unpaid.map(expenseHtml).join(""), "ไม่มีรายการค้างชำระ");
   renderList("#transfer-list", transfers.map(transferHtml).join(""), "ยังไม่มีประวัติการโอน");
+  bindSlipThumbs();
 }
 
 function setText(selector, text) {
@@ -401,6 +470,194 @@ function groupByCategory(items) {
   }, {});
 }
 
+async function handleSlipFile(event) {
+  const file = event.target.files[0];
+  if (!file) {
+    slipDraft = null;
+    document.querySelector("#slip-attached-date").value = "";
+    renderSlipPreview();
+    renderSlipCheck();
+    return;
+  }
+
+  document.querySelector("#slip-attached-date").value = today;
+  slipDraft = {
+    fileName: file.name,
+    image: await resizeImage(file, 900, 0.72),
+    attachedDate: today
+  };
+  renderSlipPreview();
+  analyzeSlipText();
+}
+
+function renderSlipPreview() {
+  const preview = document.querySelector("#slip-preview");
+  if (!preview) return;
+
+  if (!slipDraft?.image) {
+    preview.className = "slip-preview muted";
+    preview.textContent = "ยังไม่ได้แนบสลิป";
+    return;
+  }
+
+  preview.className = "slip-preview";
+  preview.innerHTML = `
+    <img src="${escapeHtml(slipDraft.image)}" alt="ตัวอย่างสลิปที่แนบ" />
+    <span>${escapeHtml(slipDraft.fileName)}</span>
+  `;
+}
+
+function analyzeSlipText() {
+  const text = value("#slip-text");
+  const amount = extractSlipAmount(text);
+  const slipDate = parseSlipDate(text);
+  if (amount && !value("#transfer-amount")) {
+    document.querySelector("#transfer-amount").value = amount;
+  }
+  if (slipDate) {
+    document.querySelector("#transfer-date").value = slipDate;
+  }
+  renderSlipCheck();
+}
+
+function renderSlipCheck() {
+  const box = document.querySelector("#slip-check");
+  if (!box) return;
+
+  const amount = toNumber(value("#transfer-amount"));
+  const slipText = value("#slip-text").trim();
+  const recipientMatched = isExpectedRecipient(slipText);
+  const slipDate = parseSlipDate(slipText);
+  const remaining = getRemainingAfterTransfer(amount);
+  const nameStatus = !slipText
+    ? "ยังไม่ได้ตรวจชื่อจากข้อความสลิป"
+    : recipientMatched
+      ? "ชื่อบัญชีตรง: รัชพล กุลวิทูรเวที"
+      : "ชื่อบัญชียังไม่ตรง กรุณาตรวจสลิป";
+  const amountStatus = amount
+    ? `ยอดโอน ${money.format(amount)} · ${remaining <= 0 ? "ไม่มียอดค้าง" : `ยอดคงเหลือ ${money.format(remaining)}`}`
+    : "ยังไม่พบยอดโอน";
+  const dateStatus = slipDate
+    ? `วันที่โอนจากสลิป ${escapeHtml(slipDate)}`
+    : value("#transfer-date")
+      ? `วันที่โอน ${escapeHtml(value("#transfer-date"))}`
+      : "ยังไม่พบวันที่โอนจากสลิป กรุณาเลือกวันที่โอน";
+  const attachedDate = slipDraft?.attachedDate || value("#slip-attached-date");
+  const attachedStatus = attachedDate ? `วันที่แนบสลิป ${escapeHtml(attachedDate)}` : "ยังไม่ได้แนบสลิป";
+
+  box.className = `slip-check ${slipText && !recipientMatched ? "warning" : amount ? "ok" : ""}`;
+  box.innerHTML = `
+    <strong>${escapeHtml(nameStatus)}</strong>
+    <span>${escapeHtml(amountStatus)}</span>
+    <span>${dateStatus}</span>
+    <span>${attachedStatus}</span>
+  `;
+}
+
+function extractSlipAmount(text) {
+  const matches = [...String(text || "").matchAll(/\d[\d,]*(?:\.\d{1,2})?/g)]
+    .map((match) => toNumber(match[0]))
+    .filter((amount) => amount > 0);
+
+  if (!matches.length) return 0;
+  return Math.max(...matches);
+}
+
+function parseSlipDate(text) {
+  const source = String(text || "");
+  const isoMatch = source.match(/\b(20\d{2}|25\d{2})[-/](\d{1,2})[-/](\d{1,2})\b/);
+  if (isoMatch) return formatDateParts(isoMatch[1], isoMatch[2], isoMatch[3]);
+
+  const numericMatch = source.match(/\b(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})\b/);
+  if (numericMatch) return formatDateParts(numericMatch[3], numericMatch[2], numericMatch[1]);
+
+  const thaiMatch = source.match(/(?:วันที่\s*)?(\d{1,2})\s*([ก-๙.]+)\s*(\d{2,4})?/);
+  if (thaiMatch) {
+    const month = thaiMonthNumber(thaiMatch[2]);
+    if (!month) return "";
+    return formatDateParts(thaiMatch[3] || new Date().getFullYear(), month, thaiMatch[1]);
+  }
+
+  return "";
+}
+
+function formatDateParts(yearInput, monthInput, dayInput) {
+  let year = Number(yearInput);
+  if (year < 100) year += year >= 70 ? 2500 : 2000;
+  if (year > 2400) year -= 543;
+
+  const month = Number(monthInput);
+  const day = Number(dayInput);
+  if (!year || month < 1 || month > 12 || day < 1 || day > 31) return "";
+
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+function isExpectedRecipient(text) {
+  if (!text) return false;
+  const normalized = normalizeThaiName(text);
+  return normalized.includes(normalizeThaiName(EXPECTED_ACCOUNT_NAME));
+}
+
+function normalizeThaiName(text) {
+  return String(text || "")
+    .replace(/นาย|นาง|นางสาว|mr|mrs|miss/gi, "")
+    .replace(/\s+/g, "")
+    .toLowerCase();
+}
+
+function getRemainingAfterTransfer(amount) {
+  const outstanding = state.expenses.reduce((sum, expense) => sum + Math.max(0, Number(expense.amount || 0) - Number(expense.paid || 0)), 0);
+  return round(Math.max(0, outstanding - Number(amount || 0)));
+}
+
+function buildSlipNote(slipText, recipientMatched) {
+  const parts = ["แนบสลิป"];
+  parts.push(recipientMatched ? "ตรวจชื่อบัญชีตรง" : "ยังไม่ได้ตรวจชื่อจากข้อความสลิป");
+  if (slipDraft?.attachedDate) parts.push(`แนบวันที่ ${slipDraft.attachedDate}`);
+  if (slipText) parts.push("มีข้อความสลิป");
+  return parts.join(" · ");
+}
+
+function resizeImage(file, maxSize, quality) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = () => {
+      const image = new Image();
+      image.onerror = reject;
+      image.onload = () => {
+        const ratio = Math.min(1, maxSize / Math.max(image.width, image.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(image.width * ratio);
+        canvas.height = Math.round(image.height * ratio);
+        const context = canvas.getContext("2d");
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      image.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function bindSlipThumbs() {
+  document.querySelectorAll(".slip-thumb").forEach((button) => {
+    button.addEventListener("click", () => {
+      const transfer = state.transfers.find((item) => item.id === button.dataset.slipId);
+      const modal = document.querySelector("#qr-modal");
+      const image = document.querySelector("#qr-modal-image");
+      const download = document.querySelector("#qr-modal-download");
+      if (!transfer?.slip?.image || !modal || !image || !download) return;
+      image.src = transfer.slip.image;
+      image.alt = "สลิปการโอน";
+      download.href = transfer.slip.image;
+      download.download = `ohm-transfer-slip-${transfer.date || today}.jpg`;
+      modal.classList.remove("hidden");
+    });
+  });
+}
+
 function getSyncUrl() {
   return (syncUrlInput?.value || localStorage.getItem(SYNC_URL_KEY) || window.OHM_APPS_SCRIPT_URL || "").trim();
 }
@@ -423,12 +680,26 @@ function pushToSheet(silent) {
   document.querySelector("#sync-form").action = syncUrl;
   document.querySelector("#sync-payload").value = JSON.stringify({
     expenses: state.expenses,
-    transfers: state.transfers,
+    transfers: state.transfers.map(transferForSync),
     updatedAt: new Date().toISOString()
   });
   document.querySelector("#sync-form").submit();
 
   if (!silent) updateSyncStatus("ส่งข้อมูลไป Google Sheet แล้ว");
+}
+
+function transferForSync(transfer) {
+  const slip = transfer.slip || {};
+  return {
+    ...transfer,
+    slip: slip.fileName ? {
+      fileName: slip.fileName,
+      attachedDate: slip.attachedDate || "",
+      recipientMatched: Boolean(slip.recipientMatched),
+      checkedText: slip.checkedText || "",
+      remainingAfterTransfer: typeof slip.remainingAfterTransfer === "number" ? slip.remainingAfterTransfer : ""
+    } : null
+  };
 }
 
 function pullFromSheet() {
