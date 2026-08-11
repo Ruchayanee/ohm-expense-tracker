@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" role="img" aria-label="กระเป๋าตังสีน้ำตาล">
+  <defs>
+    <filter id="shadow" x="-20%" y="-10%" width="140%" height="130%">
+      <feDropShadow dx="0" dy="10" stdDeviation="7" flood-color="#271707" flood-opacity=".28"/>
+    </filter>
+  </defs>
+  <g shape-rendering="crispEdges" filter="url(#shadow)">
+    <path fill="#6f3f1d" d="M38 54h94v14h14v12h12v76H42V144H30V68h8z"/>
+    <path fill="#9b642f" d="M42 46h88v12h16v14H46V60h-4z"/>
+    <path fill="#c58a48" d="M50 76h92v12H50z"/>
+    <path fill="#4b2813" d="M30 132h128v24H42v-12H30zM144 92h26v42h-26z"/>
+    <path fill="#8a5529" d="M42 92h102v40H42z"/>
+    <path fill="#b97838" d="M54 98h78v10H54zM54 116h58v8H54z"/>
+    <path fill="#2e190d" d="M156 104h10v18h-10z"/>
+    <path fill="#f2c37b" d="M158 110h6v6h-6z"/>
+    <path fill="#e8b15f" d="M56 54h54v8H56z"/>
+    <path fill="#3a1f10" d="M42 150h108v6H42z"/>
+  </g>
+</svg>
