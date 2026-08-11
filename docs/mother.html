@@ -139,8 +139,11 @@
             <p class="muted">QR และบัญชีอ้างอิงจากหน้า “ระบบบัญชี และ สต๊อก” ของ SN Kohlarn</p>
           </div>
           <div class="qr-transfer">
-            <img src="https://i.postimg.cc/QMvzFd8d/IMG-1752.jpg" alt="QR Code สำหรับโอนเงิน" />
+            <button class="qr-preview-button" type="button" data-qr-src="https://i.postimg.cc/QMvzFd8d/IMG-1752.jpg" data-qr-alt="QR Code สำหรับโอนเงิน">
+              <img src="https://i.postimg.cc/QMvzFd8d/IMG-1752.jpg" alt="QR Code สำหรับโอนเงิน" />
+            </button>
             <p>สแกน QR เพื่อโอนเงิน</p>
+            <a class="button secondary" href="https://i.postimg.cc/QMvzFd8d/IMG-1752.jpg" download="ohm-transfer-qr.jpg" target="_blank" rel="noopener">บันทึกรูป QR</a>
           </div>
           <div class="bank-box">
             <div>
@@ -156,20 +159,32 @@
         </section>
 
         <form id="transfer-form" class="panel">
-          <h2>หม่าม๊าบันทึกการโอน</h2>
+          <h2>แนบสลิป</h2>
+          <p class="muted">แนบรูปสลิปแล้วใส่ยอดที่โอนจริง ระบบจะตัดยอดค้างให้อัตโนมัติ ถ้าโอนบางส่วนจะเหลือยอดค้างไว้ให้</p>
           <label class="field">
-            <span>วันที่โอน</span>
+            <span>รูปสลิป</span>
+            <input id="transfer-slip" type="file" accept="image/*" required />
+          </label>
+          <div id="slip-preview" class="slip-preview muted">ยังไม่ได้แนบสลิป</div>
+          <label class="field">
+            <span>วันที่โอน (จากข้อมูลในสลิป)</span>
             <input id="transfer-date" type="date" required />
           </label>
           <label class="field">
-            <span>ยอดโอน</span>
-            <input id="transfer-amount" type="number" min="1" step="0.01" required />
+            <span>วันที่แนบสลิปจริง</span>
+            <input id="slip-attached-date" type="date" readonly />
           </label>
           <label class="field">
-            <span>หมายเหตุ</span>
-            <textarea id="transfer-note" rows="3"></textarea>
+            <span>ข้อความจากสลิป (ถ้ามี)</span>
+            <textarea id="slip-text" rows="4" placeholder="วางข้อความจากสลิป เช่น วันที่ 22 กรกฎาคม 2569 ชื่อผู้รับ รัชพล กุลวิทูรเวที และยอด 1,000.00"></textarea>
           </label>
-          <button type="submit">บันทึกว่าโอนแล้ว</button>
+          <label class="field">
+            <span>ยอดโอนจากสลิป</span>
+            <input id="transfer-amount" type="number" min="1" step="0.01" required />
+          </label>
+          <div id="slip-check" class="slip-check muted">แนบสลิปแล้วระบบจะช่วยตรวจชื่อบัญชีและคำนวณยอดคงเหลือ</div>
+          <input id="transfer-note" type="hidden" />
+          <button type="submit">บันทึกการโอนจากสลิป</button>
         </form>
 
         <section class="panel">
@@ -199,7 +214,14 @@
     <form id="sync-form" class="hidden" method="post" target="sync-frame">
       <input id="sync-payload" name="payload" />
     </form>
+    <div id="qr-modal" class="media-modal hidden" role="dialog" aria-label="ดู QR Code ขนาดใหญ่">
+      <div class="media-modal-card">
+        <button id="qr-modal-close" class="install-close" type="button" aria-label="ปิด">×</button>
+        <img id="qr-modal-image" alt="QR Code สำหรับโอนเงิน" />
+        <a id="qr-modal-download" class="button secondary" href="https://i.postimg.cc/QMvzFd8d/IMG-1752.jpg" download="ohm-transfer-qr.jpg" target="_blank" rel="noopener">บันทึกรูป QR</a>
+      </div>
+    </div>
     <script src="./config.js?v=20260810-sync"></script>
-    <script src="./app.js?v=20260810-app-names"></script>
+    <script src="./app.js?v=20260811-slip-date"></script>
   </body>
 </html>
