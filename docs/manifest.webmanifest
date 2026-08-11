@@ -1,9 +1,17 @@
 {
   "name": "โอม",
   "short_name": "โอม",
-  "start_url": "./child.html",
+  "start_url": "./mother.html",
   "display": "standalone",
   "background_color": "#f6efe3",
   "theme_color": "#0b1730",
-  "description": "แอปบันทึกค่าใช้จ่ายครอบครัวสำหรับโอมและหม่าม๊า"
+  "description": "แอปบันทึกค่าใช้จ่ายครอบครัวสำหรับโอมและหม่าม๊า",
+  "icons": [
+    {
+      "src": "./assets/mother-ohm-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
 }
