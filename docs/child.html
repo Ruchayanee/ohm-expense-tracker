@@ -7,7 +7,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="ค่าใช้จ่าย" />
     <title>ค่าใช้จ่าย: ฝั่งโอม</title>
-    <link rel="manifest" href="./child-manifest.webmanifest?v=20260810-app-names" />
+    <link rel="apple-touch-icon" href="./assets/ohm-wallet-icon-180.png?v=20260810-wallet-icon" />
+    <link rel="icon" type="image/png" sizes="192x192" href="./assets/ohm-wallet-icon-192.png?v=20260810-wallet-icon" />
+    <link rel="manifest" href="./child-manifest.webmanifest?v=20260811-smart-paste" />
     <link rel="stylesheet" href="./styles.css?v=20260810-luxury" />
   </head>
   <body data-view="child">
@@ -25,6 +27,28 @@
         <article><span>ยอดค้าง</span><strong id="outstanding">฿0</strong></article>
         <article><span>หม่าม๊าโอนแล้ว</span><strong id="paid-total">฿0</strong></article>
         <article><span>จำนวนรายการ</span><strong id="expense-count">0</strong></article>
+      </section>
+
+      <section class="panel smart-panel">
+        <p class="eyebrow dark">Smart Paste</p>
+        <h2>วางรายการหลายบรรทัด</h2>
+        <p class="muted">
+          วางข้อความแบบ “วันที่ 22 กรกฎา” แล้วตามด้วยรายการค่าใช้จ่าย แอปจะอ่านยอดท้ายบรรทัด จัดหมวด และรวมยอดสุทธิให้ก่อนบันทึก ถ้าบางรายการไม่มีวัน แอปจะใช้วันที่อ้างอิงด้านล่าง
+        </p>
+        <label class="field">
+          <span>วันที่อ้างอิงสำหรับรายการที่ไม่มีวัน</span>
+          <input id="bulk-default-date" type="date" />
+        </label>
+        <label class="field">
+          <span>รายการดิบ</span>
+          <textarea id="bulk-expense-text" rows="9" placeholder="วันที่ 22 กรกฎา&#10;-แชท GPT ม๊า 189&#10;-ค่าปิ้งย่างเซนทรัลเวิล 2,668"></textarea>
+        </label>
+        <div class="actions">
+          <button id="analyze-bulk-button" class="secondary" type="button">อ่านและรวมยอด</button>
+          <button id="save-bulk-button" type="button" disabled>บันทึกทั้งหมด</button>
+          <button id="clear-bulk-button" class="light" type="button">ล้างช่องนี้</button>
+        </div>
+        <div id="bulk-analysis" class="bulk-analysis" aria-live="polite"></div>
       </section>
 
       <section class="layout">
@@ -68,6 +92,6 @@
       <input id="sync-payload" name="payload" />
     </form>
     <script src="./config.js?v=20260810-sync"></script>
-    <script src="./app.js?v=20260810-app-names"></script>
+    <script src="./app.js?v=20260811-smart-paste"></script>
   </body>
 </html>
