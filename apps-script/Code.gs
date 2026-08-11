@@ -55,7 +55,7 @@ function readExpenses() {
 }
 
 function readTransfers() {
-  const sheet = getSheet(TRANSFER_SHEET, ["id", "date", "amount", "note", "items", "createdAt"]);
+  const sheet = getSheet(TRANSFER_SHEET, ["id", "date", "amount", "note", "items", "createdAt", "slipFileName", "recipientMatched", "checkedText", "remainingAfterTransfer", "slipAttachedDate"]);
   const values = sheet.getDataRange().getValues().slice(1);
 
   return values
@@ -66,7 +66,14 @@ function readTransfers() {
       amount: Number(row[2] || 0),
       note: String(row[3] || ""),
       items: parseItems(row[4]),
-      createdAt: Number(row[5] || Date.now())
+      createdAt: Number(row[5] || Date.now()),
+      slip: row[6] ? {
+        fileName: String(row[6] || ""),
+        recipientMatched: row[7] === true || String(row[7]).toLowerCase() === "true",
+        checkedText: String(row[8] || ""),
+        remainingAfterTransfer: Number(row[9] || 0),
+        attachedDate: String(row[10] || "")
+      } : null
     }));
 }
 
@@ -86,14 +93,19 @@ function writeExpenses(expenses) {
 }
 
 function writeTransfers(transfers) {
-  const headers = ["id", "date", "amount", "note", "items", "createdAt"];
+  const headers = ["id", "date", "amount", "note", "items", "createdAt", "slipFileName", "recipientMatched", "checkedText", "remainingAfterTransfer", "slipAttachedDate"];
   const rows = transfers.map((transfer) => [
     transfer.id,
     transfer.date,
     Number(transfer.amount || 0),
     transfer.note || "",
     JSON.stringify(Array.isArray(transfer.items) ? transfer.items : []),
-    Number(transfer.createdAt || Date.now())
+    Number(transfer.createdAt || Date.now()),
+    transfer.slip && transfer.slip.fileName ? transfer.slip.fileName : "",
+    transfer.slip && transfer.slip.recipientMatched ? true : false,
+    transfer.slip && transfer.slip.checkedText ? transfer.slip.checkedText : "",
+    transfer.slip && transfer.slip.remainingAfterTransfer !== undefined ? transfer.slip.remainingAfterTransfer : "",
+    transfer.slip && transfer.slip.attachedDate ? transfer.slip.attachedDate : ""
   ]);
 
   writeRows(TRANSFER_SHEET, headers, rows);
