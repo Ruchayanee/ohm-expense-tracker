@@ -135,6 +135,10 @@ h2 {
   text-transform: uppercase;
 }
 
+.eyebrow.dark {
+  color: var(--gold);
+}
+
 .muted {
   color: var(--muted);
 }
@@ -236,6 +240,177 @@ h2 {
 .layout {
   display: grid;
   gap: 18px;
+}
+
+.smart-panel {
+  display: grid;
+  gap: 14px;
+  background:
+    radial-gradient(circle at top right, rgba(184, 149, 90, 0.2), transparent 14rem),
+    linear-gradient(145deg, rgba(255, 250, 241, 0.98), rgba(239, 227, 208, 0.9));
+}
+
+.bulk-analysis {
+  display: grid;
+  gap: 14px;
+}
+
+.bulk-total {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: center;
+  border: 1px solid rgba(184, 149, 90, 0.28);
+  border-radius: 20px;
+  padding: 16px;
+  color: var(--cream);
+  background: linear-gradient(135deg, var(--navy), var(--navy-soft));
+}
+
+.bulk-total span {
+  color: rgba(255, 247, 234, 0.76);
+  font-weight: 700;
+}
+
+.bulk-total strong {
+  font-family: "Noto Serif Thai", serif;
+  font-size: clamp(24px, 5vw, 36px);
+}
+
+.summary-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.summary-pill {
+  border: 1px solid rgba(184, 149, 90, 0.3);
+  border-radius: 999px;
+  padding: 8px 12px;
+  color: var(--navy);
+  background: rgba(234, 216, 184, 0.38);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid rgba(16, 27, 51, 0.12);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.62);
+}
+
+.bulk-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 640px;
+  font-size: 14px;
+}
+
+.bulk-table th,
+.bulk-table td {
+  border-bottom: 1px solid rgba(16, 27, 51, 0.1);
+  padding: 12px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.bulk-table th {
+  color: var(--navy);
+  background: rgba(234, 216, 184, 0.28);
+  font-weight: 800;
+}
+
+.bulk-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.amount-cell {
+  color: var(--navy);
+  font-weight: 800;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.payment-card {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  gap: 16px;
+  background:
+    radial-gradient(circle at top right, rgba(184, 149, 90, 0.24), transparent 13rem),
+    linear-gradient(145deg, rgba(255, 250, 241, 0.96), rgba(239, 227, 208, 0.9));
+}
+
+.payment-card::after {
+  position: absolute;
+  right: -48px;
+  top: -62px;
+  width: 180px;
+  height: 180px;
+  border: 1px solid rgba(184, 149, 90, 0.28);
+  border-radius: 999px;
+  content: "";
+}
+
+.bank-box {
+  display: grid;
+  gap: 12px;
+  border: 1px solid rgba(184, 149, 90, 0.28);
+  border-radius: 20px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.56);
+}
+
+.qr-transfer {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  border: 1px solid rgba(184, 149, 90, 0.28);
+  border-radius: 24px;
+  padding: 16px;
+  background: rgba(11, 23, 48, 0.92);
+  color: var(--cream);
+}
+
+.qr-transfer img {
+  width: min(220px, 100%);
+  aspect-ratio: 1;
+  border: 10px solid #fff;
+  border-radius: 18px;
+  background: #fff;
+  object-fit: contain;
+  box-shadow: 0 18px 38px rgba(11, 23, 48, 0.22);
+}
+
+.qr-transfer p {
+  margin: 0;
+  color: rgba(255, 247, 234, 0.78);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.bank-box div {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: baseline;
+}
+
+.bank-box span {
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.bank-box strong {
+  color: var(--navy);
+  text-align: right;
+}
+
+.tiny-note {
+  margin-bottom: 0;
+  font-size: 13px;
 }
 
 .field {
@@ -454,6 +629,16 @@ textarea {
     align-items: flex-start;
   }
 
+  .bank-box div {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .bank-box strong {
+    text-align: left;
+  }
+
   .actions button {
     flex: 1 1 100%;
   }
@@ -466,6 +651,10 @@ textarea {
 @media (min-width: 780px) {
   .layout {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .payment-card {
+    grid-column: 1 / -1;
   }
 
   .summary {
