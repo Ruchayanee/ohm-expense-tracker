@@ -383,6 +383,21 @@ h2 {
   box-shadow: 0 18px 38px rgba(11, 23, 48, 0.22);
 }
 
+.qr-preview-button {
+  display: grid;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 18px;
+  background: transparent;
+  box-shadow: none;
+}
+
+.qr-preview-button:hover {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: none;
+}
+
 .qr-transfer p {
   margin: 0;
   color: rgba(255, 247, 234, 0.78);
@@ -411,6 +426,47 @@ h2 {
 .tiny-note {
   margin-bottom: 0;
   font-size: 13px;
+}
+
+.slip-preview {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 14px;
+  border: 1px dashed rgba(184, 149, 90, 0.42);
+  border-radius: 18px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.5);
+  font-weight: 700;
+}
+
+.slip-preview img {
+  width: min(260px, 100%);
+  border-radius: 14px;
+  box-shadow: 0 14px 30px rgba(11, 23, 48, 0.16);
+}
+
+.slip-check {
+  display: grid;
+  gap: 4px;
+  margin: 0 0 14px;
+  border: 1px solid rgba(16, 27, 51, 0.12);
+  border-radius: 18px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.slip-check strong {
+  color: var(--navy);
+}
+
+.slip-check.ok {
+  border-color: rgba(82, 132, 90, 0.34);
+  background: rgba(228, 241, 223, 0.78);
+}
+
+.slip-check.warning {
+  border-color: rgba(159, 62, 53, 0.34);
+  background: rgba(252, 226, 220, 0.78);
 }
 
 .field {
@@ -501,6 +557,62 @@ textarea {
   background: rgba(234, 216, 184, 0.34);
   font-size: 13px;
   font-weight: 700;
+}
+
+.slip-thumb {
+  display: block;
+  min-height: 0;
+  width: fit-content;
+  margin-top: 12px;
+  padding: 0;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  box-shadow: none;
+}
+
+.slip-thumb img {
+  width: 96px;
+  height: 124px;
+  border-radius: 14px;
+  object-fit: cover;
+  box-shadow: 0 10px 24px rgba(11, 23, 48, 0.16);
+}
+
+.media-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(11, 23, 48, 0.74);
+  backdrop-filter: blur(14px);
+}
+
+.media-modal.hidden {
+  display: none;
+}
+
+.media-modal-card {
+  position: relative;
+  display: grid;
+  gap: 14px;
+  width: min(520px, 100%);
+  max-height: calc(100vh - 36px);
+  border: 1px solid rgba(234, 216, 184, 0.36);
+  border-radius: 28px;
+  padding: 18px;
+  background: linear-gradient(145deg, rgba(255, 250, 241, 0.98), rgba(239, 227, 208, 0.94));
+  box-shadow: 0 30px 90px rgba(11, 23, 48, 0.34);
+}
+
+.media-modal-card img {
+  width: 100%;
+  max-height: calc(100vh - 150px);
+  border-radius: 20px;
+  object-fit: contain;
+  background: #fff;
 }
 
 .hidden {
