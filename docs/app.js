@@ -1,6 +1,7 @@
 const STORAGE_KEY = "ohm-expenses-v1";
 const SYNC_URL_KEY = "ohm-apps-script-url";
 const INSTALL_PROMPT_KEY = "ohm-ios-install-prompt-seen";
+const AUTO_REFRESH_DELAY_MS = 1500;
 const view = document.body.dataset.view;
 const money = new Intl.NumberFormat("th-TH", { style: "currency", currency: "THB" });
 const today = new Date().toISOString().slice(0, 10);
@@ -8,6 +9,8 @@ const EXPECTED_ACCOUNT_NAME = "รัชพล กุลวิทูรเวท
 const state = loadState();
 let bulkDraft = [];
 let slipDraft = null;
+let hiddenAt = 0;
+let isRefreshingApp = false;
 
 const syncUrlInput = document.querySelector("#sync-url");
 const syncStatus = document.querySelector("#sync-status");
@@ -24,10 +27,37 @@ function boot() {
   bindChild();
   bindMother();
   bindQrModal();
+  bindAutoRefreshOnAppOpen();
   render();
   updateSyncStatus();
   autoPullForMother();
   showIosInstallGuide();
+}
+
+function bindAutoRefreshOnAppOpen() {
+  window.addEventListener("pageshow", (event) => {
+    if (event.persisted) refreshAppFromNetwork();
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") {
+      hiddenAt = Date.now();
+      return;
+    }
+
+    if (document.visibilityState === "visible" && hiddenAt && Date.now() - hiddenAt > AUTO_REFRESH_DELAY_MS) {
+      refreshAppFromNetwork();
+    }
+  });
+}
+
+function refreshAppFromNetwork() {
+  if (isRefreshingApp) return;
+  isRefreshingApp = true;
+
+  const url = new URL(window.location.href);
+  url.searchParams.set("fresh", Date.now());
+  window.location.replace(url.toString());
 }
 
 function bindSync() {
