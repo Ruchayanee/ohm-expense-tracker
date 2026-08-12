@@ -366,6 +366,7 @@ h2 {
   display: grid;
   justify-items: center;
   gap: 10px;
+  text-align: center;
   border: 1px solid rgba(184, 149, 90, 0.28);
   border-radius: 24px;
   padding: 16px;
@@ -385,11 +386,25 @@ h2 {
 
 .qr-preview-button {
   display: grid;
+  place-items: center;
   min-height: 0;
+  width: min(244px, 100%);
+  aspect-ratio: 1;
   padding: 0;
   border: 0;
   border-radius: 18px;
-  background: transparent;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: none;
+}
+
+.qr-preview-button img {
+  width: 122%;
+  height: 122%;
+  border: 0;
+  border-radius: 0;
+  object-fit: cover;
+  object-position: center;
   box-shadow: none;
 }
 
@@ -613,6 +628,23 @@ textarea {
   border-radius: 20px;
   object-fit: contain;
   background: #fff;
+}
+
+.media-modal-card.qr-only {
+  justify-items: center;
+  width: min(460px, 100%);
+}
+
+.media-modal-card.qr-only img {
+  width: min(82vw, 390px);
+  height: min(82vw, 390px);
+  max-height: min(82vw, 390px);
+  padding: 0;
+  border: 14px solid #fff;
+  border-radius: 24px;
+  object-fit: cover;
+  object-position: center;
+  box-shadow: 0 24px 58px rgba(11, 23, 48, 0.24);
 }
 
 .hidden {
