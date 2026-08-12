@@ -141,6 +141,7 @@ function bindMother() {
 
 function bindQrModal() {
   const modal = document.querySelector("#qr-modal");
+  const modalCard = document.querySelector(".media-modal-card");
   const modalImage = document.querySelector("#qr-modal-image");
   const modalDownload = document.querySelector("#qr-modal-download");
 
@@ -148,6 +149,7 @@ function bindQrModal() {
     button.addEventListener("click", () => {
       if (!modal || !modalImage || !modalDownload) return;
       const src = button.dataset.qrSrc;
+      modalCard?.classList.add("qr-only");
       modalImage.src = src;
       modalImage.alt = button.dataset.qrAlt || "QR Code สำหรับโอนเงิน";
       modalDownload.href = src;
@@ -162,6 +164,7 @@ function bindQrModal() {
 }
 
 function closeQrModal() {
+  document.querySelector(".media-modal-card")?.classList.remove("qr-only");
   document.querySelector("#qr-modal")?.classList.add("hidden");
 }
 
@@ -650,6 +653,7 @@ function bindSlipThumbs() {
       const image = document.querySelector("#qr-modal-image");
       const download = document.querySelector("#qr-modal-download");
       if (!transfer?.slip?.image || !modal || !image || !download) return;
+      document.querySelector(".media-modal-card")?.classList.remove("qr-only");
       image.src = transfer.slip.image;
       image.alt = "สลิปการโอน";
       download.href = transfer.slip.image;
