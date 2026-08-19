@@ -198,6 +198,24 @@ h2 {
     var(--panel-solid);
 }
 
+.sync-lite {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  background:
+    radial-gradient(circle at top right, rgba(184, 149, 90, 0.18), transparent 12rem),
+    linear-gradient(145deg, rgba(255, 250, 241, 0.98), rgba(239, 227, 208, 0.9));
+}
+
+.sync-lite h2 {
+  margin-bottom: 4px;
+}
+
+.sync-lite p:last-child {
+  margin-bottom: 0;
+}
+
 .summary {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -248,6 +266,20 @@ h2 {
   background:
     radial-gradient(circle at top right, rgba(184, 149, 90, 0.2), transparent 14rem),
     linear-gradient(145deg, rgba(255, 250, 241, 0.98), rgba(239, 227, 208, 0.9));
+}
+
+.official-panel {
+  display: grid;
+  gap: 12px;
+  background:
+    linear-gradient(90deg, rgba(11, 23, 48, 0.06) 1px, transparent 1px),
+    linear-gradient(rgba(11, 23, 48, 0.06) 1px, transparent 1px),
+    linear-gradient(145deg, rgba(255, 252, 246, 0.98), rgba(245, 235, 218, 0.92));
+  background-size: 18px 18px, 18px 18px, auto;
+}
+
+.official-panel h2 {
+  margin-bottom: 4px;
 }
 
 .bulk-analysis {
@@ -532,6 +564,13 @@ textarea {
   font-weight: 600;
 }
 
+.sync-note {
+  margin: -6px 4px 2px;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: right;
+}
+
 .list {
   display: grid;
   gap: 12px;
@@ -785,6 +824,11 @@ textarea {
 
   .actions button {
     flex: 1 1 100%;
+  }
+
+  .sync-lite {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .small-link {
