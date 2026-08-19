@@ -12,6 +12,7 @@
   const originalRender = render;
   const originalSaveState = saveState;
   const originalPushToSheet = pushToSheet;
+  const originalRenderList = renderList;
 
   function amount(value) {
     return Math.round(Number(String(value || 0).replaceAll(",", "")) * 100) / 100;
@@ -21,6 +22,11 @@
     return appState.expenses
       .filter((expense) => Number(expense.amount || 0) > Number(expense.paid || 0))
       .sort((a, b) => String(a.date).localeCompare(String(b.date)) || Number(a.createdAt || 0) - Number(b.createdAt || 0));
+  }
+
+  function newestUnpaidExpenses() {
+    return [...unpaidExpenses()]
+      .sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0) || String(b.date).localeCompare(String(a.date)));
   }
 
   function applyItems(items) {
@@ -78,6 +84,16 @@
   saveState = function () {
     reconcile();
     return originalSaveState();
+  };
+
+  renderList = function (selector, html, emptyText) {
+    if (selector === "#unpaid-list") {
+      reconcile();
+      const sortedHtml = newestUnpaidExpenses().map(expenseHtml).join("");
+      return originalRenderList(selector, sortedHtml, emptyText);
+    }
+
+    return originalRenderList(selector, html, emptyText);
   };
 
   pushToSheet = function (silent) {
