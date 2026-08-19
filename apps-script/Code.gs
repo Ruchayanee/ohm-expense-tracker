@@ -25,8 +25,98 @@ function loadState() {
 }
 
 function saveState(state) {
-  writeExpenses(Array.isArray(state.expenses) ? state.expenses : []);
-  writeTransfers(Array.isArray(state.transfers) ? state.transfers : []);
+  const current = loadState();
+  const expenses = mergeExpenses(current.expenses, Array.isArray(state.expenses) ? state.expenses : []);
+  const transfers = mergeById(current.transfers, Array.isArray(state.transfers) ? state.transfers : []);
+
+  reconcilePayments(expenses, transfers);
+  writeExpenses(expenses);
+  writeTransfers(transfers);
+}
+
+function mergeExpenses(existingRows, incomingRows) {
+  const byId = {};
+
+  existingRows.concat(incomingRows).forEach((expense) => {
+    if (!expense || !expense.id) return;
+
+    const current = byId[expense.id] || {};
+    byId[expense.id] = {
+      id: String(expense.id),
+      date: expense.date || current.date || "",
+      category: expense.category || current.category || "",
+      description: expense.description || current.description || "",
+      amount: Number(expense.amount || current.amount || 0),
+      paid: Math.max(Number(current.paid || 0), Number(expense.paid || 0)),
+      createdAt: Number(current.createdAt || expense.createdAt || Date.now())
+    };
+  });
+
+  return Object.keys(byId)
+    .map((id) => byId[id])
+    .sort((a, b) => Number(a.createdAt || 0) - Number(b.createdAt || 0));
+}
+
+function mergeById(existingRows, incomingRows) {
+  const byId = {};
+
+  existingRows.concat(incomingRows).forEach((row) => {
+    if (!row || !row.id) return;
+    byId[row.id] = Object.assign({}, byId[row.id] || {}, row);
+  });
+
+  return Object.keys(byId)
+    .map((id) => byId[id])
+    .sort((a, b) => Number(a.createdAt || 0) - Number(b.createdAt || 0));
+}
+
+function reconcilePayments(expenses, transfers) {
+  if (!transfers.length) return;
+
+  expenses.forEach((expense) => {
+    expense.paid = 0;
+  });
+
+  transfers.forEach((transfer) => {
+    const items = Array.isArray(transfer.items) ? transfer.items : [];
+    if (items.length) {
+      applyTransferItems(expenses, items);
+      return;
+    }
+
+    applyTransferByAmount(expenses, Number(transfer.amount || 0));
+  });
+}
+
+function applyTransferItems(expenses, items) {
+  items.forEach((item) => {
+    const expense = expenses.find((entry) => entry.id === item.expenseId);
+    if (!expense) return;
+
+    const due = Math.max(0, Number(expense.amount || 0) - Number(expense.paid || 0));
+    const applied = Math.min(due, Number(item.amount || 0));
+    expense.paid = round(Number(expense.paid || 0) + applied);
+  });
+}
+
+function applyTransferByAmount(expenses, amount) {
+  let remaining = Number(amount || 0);
+  const unpaid = expenses
+    .filter((expense) => Number(expense.amount || 0) > Number(expense.paid || 0))
+    .sort((a, b) => String(a.date).localeCompare(String(b.date)) || Number(a.createdAt || 0) - Number(b.createdAt || 0));
+
+  unpaid.forEach((expense) => {
+    if (remaining <= 0) return;
+
+    const due = Math.max(0, Number(expense.amount || 0) - Number(expense.paid || 0));
+    const applied = Math.min(due, remaining);
+    expense.paid = round(Number(expense.paid || 0) + applied);
+    remaining = round(remaining - applied);
+  });
+}
+
+function round(number) {
+  return Math.round(Number(number || 0) * 100) / 100;
 }
 
 function readExpenses() {
